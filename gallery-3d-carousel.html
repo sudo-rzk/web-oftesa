@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri 3D - Portfolio Kelas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .navbar .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .navbar .nav-links a:hover {
+            color: #ffd700;
+        }
+
+        /* Canvas Container */
+        #canvas-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn.active {
+            background: #ffd700;
+            color: white;
+        }
+
+        /* Navigation Arrows */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-arrow:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-arrow.left {
+            left: 30px;
+        }
+
+        .nav-arrow.right {
+            right: 30px;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .info-panel h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            z-index: 200;
+        }
+
+        /* Fullscreen Modal */
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        .fullscreen-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .navbar .nav-links {
+                gap: 15px;
+                font-size: 14px;
+            }
+
+            .control-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .nav-arrow {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .info-panel h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Portfolio Kelas XII</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="galeri.html">Galeri</a></li>
+            <li><a href="video.html">Video</a></li>
+            <li><a href="musik.html">Musik</a></li>
+            <li><a href="kontak.html">Kontak</a></li>
+        </ul>
+    </nav>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <h2>Galeri 3D Kelas</h2>
+        <p>Drag untuk rotate • Klik foto untuk fullscreen</p>
+    </div>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation Arrows -->
+    <button class="nav-arrow left" onclick="rotateCarousel(-1)">❮</button>
+    <button class="nav-arrow right" onclick="rotateCarousel(1)">❯</button>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="control-btn active" id="autoRotateBtn" onclick="toggleAutoRotate()">
+            ⏸ Pause Rotation
+        </button>
+        <button class="control-btn" onclick="resetView()">
+            🔄 Reset View
+        </button>
+    </div>
+
+    <!-- Fullscreen Modal -->
+    <div class="fullscreen-modal" id="fullscreenModal">
+        <span class="close-modal" onclick="closeFullscreen()">×</span>
+        <img id="fullscreenImage" src="" alt="Fullscreen">
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Camera position
+        camera.position.z = 15;
+        camera.position.y = 2;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 0.8);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        // Images for carousel (using placeholder images)
+        const images = [
+            'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&h=600&fit=crop'
+        ];
+
+        const photoMeshes = [];
+        const radius = 10;
+        const numPhotos = images.length;
+
+        // Create carousel photos
+        images.forEach((imgSrc, index) => {
+            const angle = (index / numPhotos) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            // Create plane for photo
+            const geometry = new THREE.PlaneGeometry(4, 3);
+            const loader = new THREE.TextureLoader();
+            
+            loader.load(imgSrc, (texture) => {
+                const material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(x, 0, z);
+                mesh.lookAt(0, 0, 0);
+                mesh.userData = { imageUrl: imgSrc, index: index };
+                
+                scene.add(mesh);
+                photoMeshes.push(mesh);
+            });
+        });
+
+        // Mouse interaction
+        let isDragging = false;
+        let previousMouseX = 0;
+        let rotationSpeed = 0;
+        let autoRotate = true;
+        let targetRotation = 0;
+        let currentRotation = 0;
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // Mouse events
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            previousMouseX = e.clientX;
+        });
+
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            // Update mouse position for raycaster
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            if (isDragging) {
+                const deltaX = e.clientX - previousMouseX;
+                rotationSpeed = deltaX * 0.01;
+                targetRotation += rotationSpeed;
+                previousMouseX = e.clientX;
+                autoRotate = false;
+            }
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        renderer.domElement.addEventListener('click', (e) => {
+            if (!isDragging) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(photoMeshes);
+                
+                if (intersects.length > 0) {
+                    const clickedPhoto = intersects[0].object;
+                    openFullscreen(clickedPhoto.userData.imageUrl);
+                }
+            }
+        });
+
+        // Touch events for mobile
+        let touchStartX = 0;
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            const deltaX = e.touches[0].clientX - touchStartX;
+            rotationSpeed = deltaX * 0.01;
+            targetRotation += rotationSpeed;
+            touchStartX = e.touches[0].clientX;
+            autoRotate = false;
+        });
+
+        // Control functions
+        function toggleAutoRotate() {
+            autoRotate = !autoRotate;
+            const btn = document.getElementById('autoRotateBtn');
+            if (autoRotate) {
+                btn.innerHTML = '⏸ Pause Rotation';
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = '▶ Auto Rotate';
+                btn.classList.remove('active');
+            }
+        }
+
+        function rotateCarousel(direction) {
+            const angleStep = (Math.PI * 2) / numPhotos;
+            targetRotation += angleStep * direction;
+            autoRotate = false;
+        }
+
+        function resetView() {
+            targetRotation = 0;
+            camera.position.set(0, 2, 15);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function openFullscreen(imageUrl) {
+            document.getElementById('fullscreenImage').src = imageUrl;
+            document.getElementById('fullscreenModal').classList.add('active');
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenModal').classList.remove('active');
+        }
+
+        // Close fullscreen with ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Auto rotation
+            if (autoRotate) {
+                targetRotation += 0.005;
+            }
+
+            // Smooth rotation interpolation
+            currentRotation += (targetRotation - currentRotation) * 0.1;
+
+            // Rotate all photos
+            photoMeshes.forEach((mesh, index) => {
+                const baseAngle = (index / numPhotos) * Math.PI * 2;
+                const angle = baseAngle + currentRotation;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                
+                mesh.position.set(x, 0, z);
+                mesh.lookAt(0, 0, 0);
+
+                // Scale effect based on distance from camera
+                const distanceToCamera = mesh.position.distanceTo(camera.position);
+                const scale = Math.max(0.8, 1.2 - distanceToCamera / 20);
+                mesh.scale.set(scale, scale, scale);
+            });
+
+            // Slight camera movement
+            camera.position.y = 2 + Math.sin(Date.now() * 0.001) * 0.5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
